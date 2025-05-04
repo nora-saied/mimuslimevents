@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,6 +12,13 @@
 </head>
 <body>
   <h1>Michigan Muslim Events</h1>
+
+  <p style="text-align: center; margin-bottom: 20px;">
+    <a href="https://forms.gle/9YZ7yFz5HjtCQx7b9" target="_blank" style="background:#1d4ed8; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">
+      ➕ Submit an Event
+    </a>
+  </p>
+
   <div id="filters">
     <label for="cityFilter">Filter by City:</label>
     <select id="cityFilter">
@@ -22,68 +28,72 @@
 
   <div id="calendar"></div>
 
+  <div id="eventPreview" style="max-width:900px; margin:auto; padding:20px; background:#f9f9f9; border:1px solid #ccc; border-radius:8px;"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const calendarEl = document.getElementById('calendar');
       const cityFilter = document.getElementById('cityFilter');
+      const eventPreview = document.getElementById('eventPreview');
 
-      const events = [
-        {
-          title: 'Eid Bazaar',
-          start: '2025-05-10T17:00:00',
-          end: '2025-05-10T20:00:00',
-          city: 'Dearborn'
-        },
-        {
-          title: 'Friday Halaqa',
-          start: '2025-05-17T19:00:00',
-          end: '2025-05-17T21:00:00',
-          city: 'Detroit'
-        },
-        {
-          title: 'Youth Sports',
-          start: '2025-05-24T14:00:00',
-          end: '2025-05-24T16:00:00',
-          city: 'Ann Arbor'
-        },
-        {
-          title: 'Sisters Tea Night',
-          start: '2025-05-31T18:00:00',
-          end: '2025-05-31T20:00:00',
-          city: 'Warren'
-        }
-      ];
+      const feedURL = "https://script.google.com/macros/s/AKfycbzWk_5ey52yzGOd7oEFmv1pNMy1D-RJQfFH5uTcUfYLhWTRqfqcrg-UwrJxooMO-zI/exec";
 
-      // Populate city dropdown
-      const uniqueCities = [...new Set(events.map(e => e.city))].sort();
-      uniqueCities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
-        cityFilter.appendChild(option);
-      });
+      let allEvents = [];
 
-      const createEventObjects = (filter = '') =>
-        events
-          .filter(e => !filter || e.city === filter)
-          .map(e => ({
-            title: `${e.title} [${e.city}]`,
-            start: e.start,
-            end: e.end
+      function renderCalendar(eventsToDisplay) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          events: eventsToDisplay,
+          eventClick: function (info) {
+            info.jsEvent.preventDefault();
+            eventPreview.innerHTML = `
+              <h3>${info.event.title}</h3>
+              <p><strong>City:</strong> ${info.event.extendedProps.city}</p>
+              <p><strong>Description:</strong> ${info.event.extendedProps.description}</p>
+              <p><a href="${info.event.url}" target="_blank">Add to Google Calendar</a></p>
+            `;
+          }
+        });
+        calendar.render();
+
+        cityFilter.addEventListener('change', function () {
+          const selectedCity = this.value;
+          const filtered = !selectedCity
+            ? allEvents
+            : allEvents.filter(event => event.extendedProps.city === selectedCity);
+          calendar.removeAllEvents();
+          calendar.addEventSource(filtered);
+        });
+      }
+
+      fetch(feedURL)
+        .then(response => response.json())
+        .then(data => {
+          allEvents = data.map(event => ({
+            title: event.title + ' [' + event.city + ']',
+            start: event.start,
+            end: event.end,
+            extendedProps: {
+              city: event.city,
+              description: event.description
+            },
+            url: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start.replace(/[-:]/g, '').slice(0,15)}Z/${event.end.replace(/[-:]/g, '').slice(0,15)}Z&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.city + ', MI')}`
           }));
 
-      let calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        events: createEventObjects()
-      });
+          const uniqueCities = [...new Set(allEvents.map(e => e.extendedProps.city))].sort();
+          uniqueCities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
+          });
 
-      calendar.render();
-
-      cityFilter.addEventListener('change', function () {
-        calendar.removeAllEvents();
-        calendar.addEventSource(createEventObjects(this.value));
-      });
+          renderCalendar(allEvents);
+        })
+        .catch(err => {
+          console.error('Error loading events:', err);
+        });
     });
   </script>
 </body>
