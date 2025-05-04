@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Michigan Muslim Events</title>
+  <title>Michigan Muslim Events Calendar</title>
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
@@ -20,6 +20,8 @@
   </div>
 
   <div id='calendar'></div>
+
+  <div id="eventPreview" style="max-width:900px; margin:auto; padding:20px; background:#f9f9f9; border:1px solid #ccc; border-radius:8px;"></div>
 
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
   <script>
@@ -81,25 +83,14 @@
         })),
         eventClick: function(info) {
           info.jsEvent.preventDefault();
-          window.open(info.event.url, '_blank');
-        }
-      });
-
-      calendar.render();
-
-      cityFilter.addEventListener('change', function() {
-        const selectedCity = this.value;
-        calendar.removeAllEvents();
-        calendar.addEventSource(events
-          .filter(event => !selectedCity || event.city === selectedCity)
-          .map(event => ({
-            title: event.title + ' [' + event.city + ']',
-            start: event.start,
-            end: event.end,
-            extendedProps: {
-              city: event.city,
-              description: event.description
-            },
+          const preview = document.getElementById('eventPreview');
+          preview.innerHTML = `
+            <h3>${info.event.title}</h3>
+            <p><strong>City:</strong> ${info.event.extendedProps.city}</p>
+            <p><strong>Description:</strong> ${info.event.extendedProps.description}</p>
+            <p><a href="${info.event.url}" target="_blank">Add to Google Calendar</a></p>
+          `;
+        },
             url: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start.replace(/[-:]/g, '').slice(0,15)}Z/${event.end.replace(/[-:]/g, '').slice(0,15)}Z&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.city + ', MI')}`
           }))
         );
