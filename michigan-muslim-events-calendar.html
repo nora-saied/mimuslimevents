@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Michigan Muslim Events Calendar</title>
+  <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #filters { margin-bottom: 20px; }
+    #calendar { max-width: 900px; margin: auto; }
+  </style>
+</head>
+<body>
+  <h1>Michigan Muslim Events Calendar</h1>
+  <div id="filters">
+    <label for="cityFilter">Filter by City:</label>
+    <select id="cityFilter">
+      <option value="">All Cities</option>
+      <option value="Dearborn">Dearborn</option>
+      <option value="Detroit">Detroit</option>
+      <option value="Ann Arbor">Ann Arbor</option>
+      <option value="Warren">Warren</option>
+    </select>
+  </div>
+
+  <div id='calendar'></div>
+
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      const cityFilter = document.getElementById('cityFilter');
+
+      const events = [
+        {
+          title: 'Eid Bazaar',
+          start: '2025-05-10T17:00:00',
+          end: '2025-05-10T20:00:00',
+          city: 'Dearborn',
+          description: 'Join us for a community bazaar!'
+        },
+        {
+          title: 'Friday Halaqa',
+          start: '2025-05-17T19:00:00',
+          end: '2025-05-17T21:00:00',
+          city: 'Detroit',
+          description: 'Weekly halaqa session at Masjid XYZ.'
+        },
+        {
+          title: 'Youth Sports',
+          start: '2025-05-24T14:00:00',
+          end: '2025-05-24T16:00:00',
+          city: 'Ann Arbor',
+          description: 'Community youth soccer match.'
+        },
+        {
+          title: 'Sisters\' Tea Night',
+          start: '2025-05-31T18:00:00',
+          end: '2025-05-31T20:00:00',
+          city: 'Warren',
+          description: 'Relaxing evening for sisters only.'
+        }
+      ];
+
+      let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: events.map(event => ({
+          title: event.title + ' [' + event.city + ']',
+          start: event.start,
+          end: event.end,
+          extendedProps: {
+            city: event.city,
+            description: event.description
+          },
+          url: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start.replace(/[-:]/g, '').slice(0,15)}Z/${event.end.replace(/[-:]/g, '').slice(0,15)}Z&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.city + ', MI')}`
+        })),
+        eventClick: function(info) {
+          info.jsEvent.preventDefault();
+          window.open(info.event.url, '_blank');
+        }
+      });
+
+      calendar.render();
+
+      cityFilter.addEventListener('change', function() {
+        const selectedCity = this.value;
+        calendar.removeAllEvents();
+        calendar.addEventSource(events
+          .filter(event => !selectedCity || event.city === selectedCity)
+          .map(event => ({
+            title: event.title + ' [' + event.city + ']',
+            start: event.start,
+            end: event.end,
+            extendedProps: {
+              city: event.city,
+              description: event.description
+            },
+            url: `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.start.replace(/[-:]/g, '').slice(0,15)}Z/${event.end.replace(/[-:]/g, '').slice(0,15)}Z&details=${encodeURIComponent(event.description)}&location=${encodeURIComponent(event.city + ', MI')}`
+          }))
+        );
+      });
+    });
+  </script>
+</body>
+</html>
