@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,10 +16,6 @@
     <label for="cityFilter">Filter by City:</label>
     <select id="cityFilter">
       <option value="">All Cities</option>
-      <option value="Dearborn">Dearborn</option>
-      <option value="Detroit">Detroit</option>
-      <option value="Ann Arbor">Ann Arbor</option>
-      <option value="Warren">Warren</option>
     </select>
   </div>
 
@@ -62,6 +57,15 @@
           description: 'Relaxing evening for sisters only.'
         }
       ];
+
+      // Populate city filter dropdown based on event data
+      const uniqueCities = [...new Set(events.map(e => e.city))].sort();
+      uniqueCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        cityFilter.appendChild(option);
+      });
 
       let calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
